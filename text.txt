@@ -1,0 +1,38 @@
+Operaciones
+Search
+Predecessor
+Successor
+Insert
+Delete
+Rotar izquierda
+Rotar derecha
+Rotar izquierda derecha
+Rotar derecha izquierda
+Recolor
+Preorden
+Inorder
+Postorden
+Minimo
+Maximo
+getRoot
+
+
+get Height
+get Size
+get Depth
+get Level
+get Balance
+get Parent
+get Grandparent
+get Uncle
+get Sibling
+get Color
+get Key
+get Value
+get Left
+get Right
+get Root
+get Predecessor
+get Successor 
+
+Print
