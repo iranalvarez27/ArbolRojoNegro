@@ -8,11 +8,11 @@ class RedBlackTree{
         Node<T>* root;
         Node<T>* node;
         //Funcion para limpiar el arbol
-        void clear(Node<T>* node){
+        void clearTree(Node<T>* node){
             if(node != nullptr){
                 //Primero se elimina los nodos de la izquierda y derecha 
-                clear(node->right);
-                clear(node->left);
+                clearTree(node->right);
+                clearTree(node->left);
                 //Finalmente el nodo padre
                 delete node;
             }
@@ -20,26 +20,28 @@ class RedBlackTree{
 
     public:
         //Constructor
+        RedBlackTree(){
+            this->root = nullptr;
+        }
         RedBlackTree(T data){
-            node = new Node<T>();
+            node = new Node<T>(data);
             node->data = data;
             node->color = 0;
             node->height = 0;
             node->left = nullptr;
             node->right = nullptr;
             root = node;
-
         }
 
         //Destructor
         ~RedBlackTree(){
-            clear(root);
+            clearTree(root);
         }
         
         //Metodos
 
         //Funcion recursiva para saber la altura de un nodo en el arbol
-        Node<T>* getHeight(Node<T>* node){
+        int getHeight(Node<T>* node){
             if(empty()){
                 return 0; //Como es un arbol vacio, su altura es 0
             }
@@ -51,11 +53,11 @@ class RedBlackTree{
             }
         }
 
-        void getHeight(){
+        int getHeight(){
             return getHeight(root);
         }
 
-        Node<T>* getSize(Node<T>* node){
+        int getSize(Node<T>* node){
             if(empty()){
                 return 0;
             }
@@ -66,7 +68,8 @@ class RedBlackTree{
                 return totalSize; //Tamaño total del arbol
             }
         }
-        void getSize(){
+
+        int getSize(){
             return getSize(root);
         }
 
@@ -76,7 +79,7 @@ class RedBlackTree{
 
         Node<T>* getDepth(Node<T>* node){
             if(empty()){
-                return 0;
+                return -1;
             }
             else{
                 int leftChildDepth = getDepth(node->left);
@@ -91,23 +94,23 @@ class RedBlackTree{
             }
         }
 
-        void getDepth(){
+        int getDepth(){
             return getDepth(root);
 
         }
-        void getParent(){
+        Node<T>* getParent(){
             return node->parent;
         }
 
         Node<T>* getSibblings(){
             if(node == nullptr || node->parent == nullptr){
-                return nullptr;
+                return make_pair(nullptr, nullptr);
             }
             else if(node == node->parent->left){
-                return node->parent->right;
+                return make_pair(node->parent->right, nullptr);
             }
             else{
-                return node->parent->left; 
+                return make_pair(node->parent->left, nullptr);
             }
         }
 
@@ -126,6 +129,7 @@ class RedBlackTree{
             else
                 return grandparent->left;
         }
+
         void leftRotate(Node<T>* node) {
             Node<T>* rightChild = node->right;
             node->right = rightChild->left;
@@ -159,7 +163,7 @@ class RedBlackTree{
         }
         
 
-        Node<T>* getColor(){
+        bool getColor(){
             return node->color;
         }
 
@@ -175,6 +179,47 @@ class RedBlackTree{
             return node->right;
         }
 
+        Node<T>* getMin(Node<T>* node){
+            Node<T>* temp = node;
+            while(temp->left != nullptr){
+                temp = temp->left;
+            }
+            return temp;
+        }
+
+        Node<T>* getMax(Node<T>* node){
+            Node<T>* temp = node;
+            while(temp->right != nullptr){
+                temp = temp->right;
+            }
+            return temp;
+        }
+
+         Node<T>* getPredecessor(Node<T>* node){
+            if(node->left != nullptr)
+                return getMax(node->left);
+
+            //Caso: si el nodo no tiene un subsarbol izquierdo, se busca el ancestro mas cercano
+            Node<T>* temp = node->parent;
+            while(temp != nullptr && node == temp->left){
+                node = temp;
+                temp = temp->parent;
+            }
+            return temp;
+        } 
+
+         Node<T>* getSuccessor(Node<T>* node){
+            if(node->right != nullptr)
+                return getMin(node->right);
+            //Caso contrario, se busca el sucesor mas cercano
+            Node<T>* temp = node->parent;
+            while(temp != nullptr && node == temp->right){
+                node = temp;
+                temp = temp->parent;
+            }
+            return temp;
+         }
+
         Node<T>* getRoot(){
             return root;
         }
@@ -185,11 +230,18 @@ class RedBlackTree{
 
         //Insertion function
         void insert(Node<T>* node){
+            node->color = 1; //El nodo insertado es siempre rojo
+            node->left = nullptr;
+            node->right = nullptr;
+            
+            //Caso base: para arbol vacio el nodo se convierte en la raiz
             if(empty()){
+                root = node;
                 node->color = 0; //Color negro
                 node->left = nullptr;
                 node->right = nullptr;
             }
+
             while(node != root && node->parent->color == 1){
                 if(node->parent == getGrandparent(node)->left){
                     Node<T>* uncle = getUncle(node);
@@ -210,9 +262,10 @@ class RedBlackTree{
                         rightRotate(getGrandparent(node));
                     }
                 }
+
                 else{
                     Node<T>* uncle = getUncle(node);
-                    if((uncle != nullptr) && (uncle->color = 1)){
+                    if((uncle != nullptr) && (uncle->color == 1)){
                         node->parent->color = 0;
                         uncle->color = 0;
                         getGrandparent(node)->color = 1;
@@ -229,7 +282,7 @@ class RedBlackTree{
                     leftRotate(getGrandparent(node));
                 }
             }
-            root->color = 0;
+            root->color = 0; //La raiz es siempre negra
         }
 
     void rotateLeft(Node<T>* node){
@@ -277,6 +330,101 @@ class RedBlackTree{
         leftChild->right = node; //El hijo derecho del hijo izquierdo es el nodo
         node->parent = leftChild; //El padre del nodo es el hijo izquierdo
     }
+
+    void delete(Node<T>* node){
+        Node<T>* temp = node;
+        Node<T>* temp2;
+        bool tempColor = temp->color; //Color temporal del nodo
+
+        if(node->left == nullptr){
+            temp2 = node->right;
+            replace(node, node->right);
+        } 
+        else if(node->right == nullptr){
+            temp2 = node->left;
+            replace(node, node->left);
+        }
+        else{
+            temp2 = getMin(node->right);
+            tempColor = temp2->color;
+            temp = temp2->right;
+
+            if(temp->parent == node){
+                temp2->parent = temp;
+            } else{
+                replace(temp2, temp2->right);
+                temp2->right = node->right;
+                temp2->right->parent = temp2;
+            }
+            replace(node, temp2);
+            temp->left = node->left;
+            temp->left->parent = temp;
+            temp->color = node->color;
+        }
+        //Verificamos si el nodo era negro, asi que mantenemos la propiedad del arbol
+        if(tempColor == 0){
+            delete_adjust(temp);
+        }
+        delete node;
+    }
+
+    void replace(Node<T>* node1, Node<T>* node2){
+        if(node1->parent == nullptr){
+            root = node2;
+        }
+        else if(node1 == node1->parent->left){
+            node1->parent->left = node2;
+        }
+        else{
+            node1->parent->right = node2;
+        }
     
+        if(node2 != nullptr){
+            node2->parent = node1->parent;
+        }
+    }
+
+    //Funcion para mantener las propiedades del RB tree luego de eliminar
+
+    void delete_adjust(Node<T>* node){
+        while(node != root && (node == nullptr || node->color != 0)){
+            if(node == node->parent->left){
+                Node<T>* temp = node->parent->right;
+
+                if(temp != nullptr && temp->color == 1){
+                    temp->color = 0;
+                    node->parent->color = 1;
+                    rotateLeft(node->parent);
+                    temp = node->parent->right;
+                }
+
+                if((temp->left == nullptr || temp->left->color == 0) && (temp->right == nullptr || temp->right->color == 0)){
+                    temp->color = 1;
+                    node = node->parent;
+                }else{
+                    if(temp->right == nullptr || temp->right->color == 0){
+                        if(temp->left != nullptr){
+                            temp->left->color = 0;
+                        }
+                        temp->color = 1;
+                        rotateRight(temp->parent);
+                        temp = node->parent->right;
+                    }
+                    temp->color = node->parent->color;
+                    node->parent->color = 0;
+                    if(temp->right != nullptr){
+                        temp->right->color = 0;
+                    }
+                    rotateLeft(temp->parent);
+                    node = root;
+                }
+            }
+            
+        }
+        if(node != nullptr){
+            node->color = 0;
+        }
+    }
+
 };
 

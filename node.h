@@ -11,7 +11,7 @@ struct Node{
     Node* right;
     //Color asignado para el nodo: rojo o negro
     bool color; //0 para negro y 1 para rojo
-    int height;
+    int height; //altura
     void killSelf(){
             if(left != nullptr) {
                 left->killSelf();
